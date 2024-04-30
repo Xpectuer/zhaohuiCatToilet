@@ -1,0 +1,3 @@
+[submodule "miot-plugin-sdk"]
+	path = miot-plugin-sdk
+	url = git@github.com:Xpectuer/miot-plugin-sdk.git
