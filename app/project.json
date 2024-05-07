@@ -1,0 +1,11 @@
+{
+        "package_path": "shzh.light.demo0",
+        "min_sdk_api_level":10070,
+        "developer_id": "",
+        "version_code":1,
+        "create_timestamp": "1714930395965",
+        "entrance_scene":{
+            "action_ids":[],
+            "trigger_ids":[]
+        }
+    }

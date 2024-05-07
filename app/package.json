@@ -1,0 +1,10 @@
+{
+        "name": "project-shzh-light-demo0",
+        "version": "1.0.70",
+        "scripts":{
+            "start":"node ../../bin/runProject.js"
+        },
+        "dependencies":{
+
+        }
+    }
