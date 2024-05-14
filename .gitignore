@@ -1,0 +1,4 @@
+build
+sdkconfig*
+dependencies.lock
+firmware/managed_components/
