@@ -125,8 +125,8 @@ void TM1638_write(uint8_t addr, uint8_t data){
 }
 
 void TM1638_write_block(uint8_t data[]){
-	//ESP_LOGI(TAG, "write block data: %02x %02x %02x %02x %02x %02x %02x %02x ", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
-	//ESP_LOGI(TAG, "write block data: %02x %02x %02x %02x %02x %02x %02x %02x ", data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
+	ESP_LOGI(TAG, "write block data: %02x %02x %02x %02x %02x %02x %02x %02x ", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7]);
+	ESP_LOGI(TAG, "write block data: %02x %02x %02x %02x %02x %02x %02x %02x ", data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
 	if (mode_s & TM1638_DATA_NOINCR)
 		TM1638_set_data(mode_s & ~TM1638_DATA_NOINCR);
 	TM1638_start();

@@ -16,6 +16,7 @@
 #define BDC_MCPWM_GPIO_A              CONFIG_DRV8871_A
 #define BDC_MCPWM_GPIO_B              CONFIG_DRV8871_B
 
+
 static esp_err_t bdc_motor_mcpwm_forward_brake(bdc_motor_t *motor);
 static esp_err_t bdc_motor_mcpwm_reverse_brake(bdc_motor_t *motor);
 
@@ -47,6 +48,10 @@ esp_err_t DRV8871_init(void){
     return ESP_OK;
 }
 
+uint32_t DRV8871_get_speed(){
+    return speed_percent;
+}
+
 esp_err_t DRV8871_set_speed(uint32_t speed){
     ESP_RETURN_ON_FALSE(speed <= 100, ESP_ERR_INVALID_ARG, TAG, "invalid argument: %"PRIu32, speed);
     speed_percent = speed;
@@ -55,6 +60,18 @@ esp_err_t DRV8871_set_speed(uint32_t speed){
     if (brake_mode)
         comp_value = BDC_MCPWM_DUTY_TICK_MAX - comp_value;
     return bdc_motor_set_speed(motor, comp_value);
+};
+
+esp_err_t DRV8871_speed_up(void){
+    int speed = speed_percent+SPEED_STEP;
+    if (speed > 100) speed = 100;
+    return DRV8871_set_speed(speed);
+};
+
+esp_err_t DRV8871_speed_down(void){
+    int speed = speed_percent-SPEED_STEP;
+    if (speed < 0) speed = 0;
+    return DRV8871_set_speed(speed);
 };
 
 esp_err_t DRV8871_forward(void){
