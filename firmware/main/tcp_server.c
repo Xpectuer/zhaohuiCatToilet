@@ -29,6 +29,8 @@
 #include "TM1638_driver.h"
 #include "drv8871_driver.h"
 #include "driver/gpio.h"
+#include "main.h"
+#include "motor.h"
 
 #define PORT                        CONFIG_PORT
 #define KEEPALIVE_IDLE              CONFIG_KEEPALIVE_IDLE
@@ -36,8 +38,7 @@
 #define KEEPALIVE_COUNT             CONFIG_KEEPALIVE_COUNT
 
 
-static const char *TAG = "example";
-static MessageBufferHandle_t messageBuffer;
+static const char *TAG = "server";
 #define BUFFSIZE 128
 #define STREAMBUFFSIZE 256
 
@@ -210,61 +211,6 @@ CLEAN_UP:
     vTaskDelete(NULL);
 }
 
-uint8_t hex_to_nibble(char c){
-	if (c >= '0' && c <= '9') return c - '0';
-	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-	return 0;
-}
-
-static void command_task(void *pvParameters)
-{
-	size_t cmdlen = 0;
-	char cmdbuf[BUFFSIZE];
-	char *p = cmdbuf;
-	uint8_t b;
-	while (1) {
-		cmdlen = xMessageBufferReceive(messageBuffer, cmdbuf, BUFFSIZE-1, portMAX_DELAY);
-		if (0 == cmdlen) {
-			ESP_LOGE(TAG, "Command reception failed from message buffer");
-			continue;
-		}
-		cmdbuf[cmdlen] = '\0';
-		ESP_LOGI(TAG, "Command (%d bytes): %s", cmdlen, cmdbuf);
-		switch (cmdbuf[0]) {
-			case 'w':
-				p = cmdbuf + 1;
-				for (int i = 0; i < TM1638_MEMSIZE; ++i){
-					while (' ' == *p) p++;
-					if (p >= cmdbuf + cmdlen){
-						ESP_LOGW(TAG, "Command syntax warning: w: insufficient data length");
-						break;
-					}
-					b = hex_to_nibble(*p++);
-
-					while (' ' == *p) p++;
-					if (p >= cmdbuf + cmdlen){
-						ESP_LOGW(TAG, "Command syntax warning: w: insufficient data length");
-						break;
-					}
-					b = (b << 4) | hex_to_nibble(*p++);
-
-					TM1638_write_buffer(i, b);
-				}
-				TM1638_flush();
-				break;
-			case 's':
-				break;
-			case 'r':
-				break;
-			default:
-				ESP_LOGW(TAG, "Unrecognized command: %c", cmdbuf[0]);
-				break;
-		}
-	}
-}
-
-
 void app_main(void)
 {
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -281,13 +227,14 @@ void app_main(void)
      */
     ESP_ERROR_CHECK(example_connect());
 
-	messageBuffer = xMessageBufferCreate(STREAMBUFFSIZE);
+	messageBuffer = xMessageBufferCreate(MESSAGEBUFFSIZE);
 	if (NULL == messageBuffer){
 		ESP_LOGE("main", "Failed to create message buffer");
 		abort();
 	}
 
     xTaskCreate(command_task, "command", 4096, NULL, 5, NULL);
+    xTaskCreate(motor_task, "motor", 4096, NULL, 5, NULL);
 
 #ifdef CONFIG_IPV4
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
@@ -296,23 +243,24 @@ void app_main(void)
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
 #endif
 
-    for (int i=0; i < 100; i++){
-        ESP_ERROR_CHECK(DRV8871_set_speed(0));
-        if (i & 1)
-            ESP_ERROR_CHECK(DRV8871_forward_brake());
-        else
-            ESP_ERROR_CHECK(DRV8871_reverse_brake());
-        for (int j=0; j <= 100; j=j+5 ){
-            ESP_ERROR_CHECK(DRV8871_set_speed(j));
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-        }
-        if (i & 1)
-            ESP_ERROR_CHECK(DRV8871_forward());
-        else
-            ESP_ERROR_CHECK(DRV8871_reverse());
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        ESP_ERROR_CHECK(DRV8871_coast());
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-
+    //for (int i=0; i < 10; i++){
+    //    ESP_ERROR_CHECK(DRV8871_set_speed(0));
+    //    if (i & 1)
+    //        ESP_ERROR_CHECK(DRV8871_forward_brake());
+    //    else
+    //        ESP_ERROR_CHECK(DRV8871_reverse_brake());
+    //    for (int j=0; j <= 100; j=j+5 ){
+    //        ESP_ERROR_CHECK(DRV8871_set_speed(j));
+    //        vTaskDelay(100 / portTICK_PERIOD_MS);
+    //    }
+    //    if (i & 1)
+    //        ESP_ERROR_CHECK(DRV8871_forward());
+    //    else
+    //        ESP_ERROR_CHECK(DRV8871_reverse());
+    //    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    //    ESP_ERROR_CHECK(DRV8871_coast());
+    //    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //}
+    
+    ESP_ERROR_CHECK(motor_auto_process());
 }
