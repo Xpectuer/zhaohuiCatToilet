@@ -17,6 +17,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_check.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
@@ -26,11 +27,8 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include "TM1638_driver.h"
-#include "drv8871_driver.h"
-#include "driver/gpio.h"
-#include "main.h"
 #include "motor.h"
+#include "tcp_server.h"
 
 #define PORT                        CONFIG_PORT
 #define KEEPALIVE_IDLE              CONFIG_KEEPALIVE_IDLE
@@ -114,7 +112,27 @@ static void do_retransmit(const int sock)
     } while (len > 0);
 }
 
-static void tcp_server_task(void *pvParameters)
+esp_err_t tcp_server_init()
+{
+    ESP_RETURN_ON_ERROR(nvs_flash_init(), TAG, "nvs flash init failed");
+    ESP_RETURN_ON_ERROR(esp_netif_init(), TAG, "esp netif init failed");
+
+    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
+     * Read "Establishing Wi-Fi or Ethernet Connection" section in
+     * examples/protocols/README.md for more information about this function.
+     */
+    ESP_RETURN_ON_ERROR(example_connect(), TAG, "example connect failed");
+
+	messageBuffer = xMessageBufferCreate(MESSAGEBUFFSIZE);
+	if (NULL == messageBuffer){
+		ESP_LOGE(TAG, "Failed to create message buffer");
+		return ESP_ERR_NO_MEM;
+	}
+
+    return ESP_OK;
+}
+
+void tcp_server_task(void *pvParameters)
 {
     char addr_str[128];
     int addr_family = (int)pvParameters;
@@ -211,56 +229,3 @@ CLEAN_UP:
     vTaskDelete(NULL);
 }
 
-void app_main(void)
-{
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(TM1638_init());
-    ESP_ERROR_CHECK(DRV8871_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    //gpio_dump_io_configuration(stdout, SOC_GPIO_VALID_GPIO_MASK);
-
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
-    ESP_ERROR_CHECK(example_connect());
-
-	messageBuffer = xMessageBufferCreate(MESSAGEBUFFSIZE);
-	if (NULL == messageBuffer){
-		ESP_LOGE("main", "Failed to create message buffer");
-		abort();
-	}
-
-    xTaskCreate(command_task, "command", 4096, NULL, 5, NULL);
-    xTaskCreate(motor_task, "motor", 4096, NULL, 5, NULL);
-
-#ifdef CONFIG_IPV4
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
-#endif
-#ifdef CONFIG_IPV6
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET6, 5, NULL);
-#endif
-
-    //for (int i=0; i < 10; i++){
-    //    ESP_ERROR_CHECK(DRV8871_set_speed(0));
-    //    if (i & 1)
-    //        ESP_ERROR_CHECK(DRV8871_forward_brake());
-    //    else
-    //        ESP_ERROR_CHECK(DRV8871_reverse_brake());
-    //    for (int j=0; j <= 100; j=j+5 ){
-    //        ESP_ERROR_CHECK(DRV8871_set_speed(j));
-    //        vTaskDelay(100 / portTICK_PERIOD_MS);
-    //    }
-    //    if (i & 1)
-    //        ESP_ERROR_CHECK(DRV8871_forward());
-    //    else
-    //        ESP_ERROR_CHECK(DRV8871_reverse());
-    //    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    //    ESP_ERROR_CHECK(DRV8871_coast());
-    //    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //}
-    
-    ESP_ERROR_CHECK(motor_auto_process());
-}

@@ -5,7 +5,7 @@
 #include "drv8871_driver.h"
 #include "freertos/message_buffer.h"
 #include "motor.h"
-#include "main.h"
+#include "tcp_server.h"
 
 MessageBufferHandle_t messageBuffer;
 static const char *TAG = "command";
