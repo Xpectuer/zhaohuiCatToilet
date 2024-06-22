@@ -1,4 +1,4 @@
-menu "Example Configuration"
+menu "Network Configuration"
 
     config IPV4
         bool "IPV4"
@@ -34,34 +34,81 @@ menu "Example Configuration"
         help
             Keep-alive probe packet retry count.
 
+    config WIFI_SSID
+        string "WiFi SSID"
+        default "myssid"
+        help
+            SSID (network name) for the example to connect to.
+
+    config WIFI_PASSWORD
+        string "WiFi Password"
+        default "mypassword"
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+            Can be left blank if the network has no security set.
+
+    config MAXIMUM_RETRY
+        int "Maximum retry"
+        default 5
+        help
+            Set the Maximum retry to avoid station reconnecting to the AP unlimited when the AP is really inexistent.
+
+endmenu
+
+menu "GPIO pin Configuration"
+
     config TM1638_STB
         int "TM1638 STB GPIO pin"
-        default 21
+        default 5
         help
             GPIO pin number connected to TM1638 STB
 
     config TM1638_CLK
         int "TM1638 CLK GPIO pin"
-        default 19
+        default 18
         help
             GPIO pin number connected to TM1638 CLK
 
     config TM1638_DIO
         int "TM1638 DIO GPIO pin"
-        default 18
+        default 23
         help
             GPIO pin number connected to TM1638 DIO
 
     config DRV8871_A
         int "burshed motor driver PWM pin A"
-        default 12
+        default 32
         help
             PWM GPIO pin number connected to DRV8871_A
 
     config DRV8871_B
         int "burshed motor driver PWM pin B"
-        default 14
+        default 33
         help
             PWM GPIO pin number connected to DRV8871_B
+
+    config HX711_SCK
+        int "HX711 weight sensor ADC SCK"
+        default 16
+        help
+            GPIO pin number connected to HX711 SCK
+
+    config HX711_DT
+        int "HX711 weight sensor ADC DT"
+        default 17
+        help
+            GPIO pin number connected to HX711 DT
+
+    config ADC1_IN
+        int "motor current ADC"
+        default 35
+        help
+            ADC1 GPIO pin number connected to motor current feedback
+
+    config RESET_BTN
+        int "soft reset button for clearing config"
+        default 27
+        help
+            GPIO pin number for soft reset, hold for 3s to clear wifi connection config and other data
 
 endmenu

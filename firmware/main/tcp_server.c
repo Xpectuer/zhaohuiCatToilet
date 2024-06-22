@@ -20,14 +20,13 @@
 #include "esp_check.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
-#include "protocol_examples_common.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include "motor.h"
+#include "command.h"
 #include "tcp_server.h"
 
 #define PORT                        CONFIG_PORT
@@ -79,7 +78,8 @@ static void do_retransmit(const int sock)
 							break;
 						case '\n':
 							// send data to command processing task
-							xMessageBufferSend(messageBuffer, cmdbuf, cmdlen, portMAX_DELAY);
+                            if (messageBuffer)
+                                xMessageBufferSend(messageBuffer, cmdbuf, cmdlen, portMAX_DELAY);
 							overflow = false;
 							cmdlen = 0;
 							break;
@@ -110,26 +110,6 @@ static void do_retransmit(const int sock)
 			*/
         }
     } while (len > 0);
-}
-
-esp_err_t tcp_server_init()
-{
-    ESP_RETURN_ON_ERROR(nvs_flash_init(), TAG, "nvs flash init failed");
-    ESP_RETURN_ON_ERROR(esp_netif_init(), TAG, "esp netif init failed");
-
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
-    ESP_RETURN_ON_ERROR(example_connect(), TAG, "example connect failed");
-
-	messageBuffer = xMessageBufferCreate(MESSAGEBUFFSIZE);
-	if (NULL == messageBuffer){
-		ESP_LOGE(TAG, "Failed to create message buffer");
-		return ESP_ERR_NO_MEM;
-	}
-
-    return ESP_OK;
 }
 
 void tcp_server_task(void *pvParameters)
