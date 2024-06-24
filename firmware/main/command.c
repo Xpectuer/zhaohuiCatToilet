@@ -7,14 +7,39 @@
 #include "motor.h"
 #include "command.h"
 
+#define STR(x) #x
+#define VERSION STR(CONFIG_PROJECT_VERSION_MAJOR.CONFIG_PROJECT_VERSION_MINOR.CONFIG_PROJECT_VERSION_PATCH)
+#define PROJECT_NAME CONFIG_PROJECT_NAME
+#define COMPILE_DATE __DATE__
+
 MessageBufferHandle_t messageBuffer;
 static const char *TAG = "command";
+const char *greetings = "This is " PROJECT_NAME " commandline interface, version " VERSION ", build date " COMPILE_DATE ".\n"
+"\n"
+"Enter ? or h for help:\n";
+
+const char *helpstr = "Commands:\n"
+"w      write "STR(TM1638_MEMSIZE)" bytes of hex data to TM1638 segment display\n"
+"s      write a string to TM1638 segment display\n"
+"f      start motor forward\n"
+"r      start motor reversed\n"
+"b      brake motor\n"
+"c      coast motor\n"
+"+      speedup motor\n"
+"-      speeddown motor\n"
+"\n";
 
 uint8_t hex_to_nibble(char c){
 	if (c >= '0' && c <= '9') return c - '0';
 	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
 	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
 	return 0;
+}
+
+void print_help(){
+}
+
+void print_status(){
 }
 
 void command_task(void *pvParameters)
@@ -32,6 +57,9 @@ void command_task(void *pvParameters)
 		cmdbuf[cmdlen] = '\0';
 		ESP_LOGI(TAG, "Command (%d bytes): %s", cmdlen, cmdbuf);
 		switch (cmdbuf[0]) {
+			case 'h':
+                print_help();
+                break;
 			case 'w':
 				p = cmdbuf + 1;
 				for (int i = 0; i < TM1638_MEMSIZE; ++i){
@@ -91,6 +119,9 @@ void command_task(void *pvParameters)
 			case '-':
                 DRV8871_speed_down();
 				break;
+            case 'p':
+                print_status();
+                break;
 			default:
 				ESP_LOGW(TAG, "Unrecognized command: %c", cmdbuf[0]);
 				break;

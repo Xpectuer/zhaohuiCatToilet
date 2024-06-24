@@ -5,5 +5,6 @@ idf_component_register(SRCS
     "command.c"
     "motor.c"
     "TM1638_driver.c"
+    "hx711_driver.c"
     "drv8871_driver.c"
     INCLUDE_DIRS ".")

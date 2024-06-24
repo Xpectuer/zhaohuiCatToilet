@@ -1,3 +1,22 @@
+menu "Version Configuration"
+    config PROJECT_NAME
+        string "Project name"
+        default "Zhaohui Cat Toilet"
+
+    config PROJECT_VERSION_MAJOR
+        int "Major version number"
+        default 0
+
+    config PROJECT_VERSION_MINOR
+        int "Minor version number"
+        default 0
+
+    config PROJECT_VERSION_PATCH
+        int "Patch version number"
+        default 0
+
+endmenu
+
 menu "Network Configuration"
 
     config IPV4

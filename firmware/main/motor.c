@@ -20,12 +20,12 @@ esp_err_t motor_auto_process(){
     for (int i=0; i < 10; i++) {
         if (!motor_auto) break;
         motor_next_state = M_Forward_Starting;
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         motor_next_state = M_Coast;
         vTaskDelay(1000 / portTICK_PERIOD_MS);
         if (!motor_auto) break;
         motor_next_state = M_Reverse_Starting;
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
         motor_next_state = M_Coast;
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
