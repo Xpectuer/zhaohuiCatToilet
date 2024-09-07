@@ -1,0 +1,5 @@
+Record=TopLevelDocument|FileName=Core.SchDoc|SheetNumber=1
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=IO2.SchDoc|SheetNumber=5
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=IO.SchDoc|SheetNumber=4
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=Power.SchDoc|SheetNumber=3
+Record=NoMainPathDocument|SourceDocument=Core.SchDoc|FileName=Sensor.SchDoc|SheetNumber=2
