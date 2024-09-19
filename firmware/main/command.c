@@ -4,6 +4,7 @@
 #include "driver/uart_vfs.h"
 #include "driver/gpio.h"
 #include "linenoise/linenoise.h"
+#include "wifi_provisioning/manager.h"
 #include "esp_log.h"
 #include "esp_err.h"
 #include "esp_check.h"
@@ -29,7 +30,6 @@
 #define VERSION COMPOSE_VERSION(CONFIG_PROJECT_VERSION_MAJOR, CONFIG_PROJECT_VERSION_MINOR, CONFIG_PROJECT_VERSION_PATCH)
 #define PROJECT_NAME CONFIG_PROJECT_NAME
 #define COMPILE_DATE __DATE__
-#define LOG_COLOR_YELLOW LOG_COLOR_GREEN
 
 
 #define CMD_LIST_GEN(FUNC) \
@@ -133,6 +133,7 @@ static void cmd_info(const char* cmd){
     }
 }
 
+/*
 static void cmd_wifi_prov(const char* cmd){
     assert (cmd[0] == 'w');
     // const char* wifi_helpstr = "usage: w[?p] wifi provisioning\n"
@@ -152,6 +153,7 @@ static void cmd_wifi_prov(const char* cmd){
     }
     
 }
+*/
 
 static void cmd_motor_ctrl(const char* cmd){
     assert (cmd[0] == 'm');
@@ -388,6 +390,8 @@ void cmd_advanced(const char* cmd){
         "aa               \tget app sha256 checksum\n"
         "ag <addr>        \tget 32-bit hex data at hex address <addr>\n"
         "as <addr> <value>\tset 32-bit hex data at hex address <addr>\n"
+        "ac               \tclear provisioning config\n"
+        "ap               \tstart provisioning\n"
         "ar               \treboot device\n"
         ;
     const char *p = cmd+1;
@@ -424,6 +428,16 @@ void cmd_advanced(const char* cmd){
             printf("system restarting ...\n");
             fflush(stdout);
             esp_restart();
+            break;
+        case 'c':
+            config_erase_key("wifi_ssid");
+            config_erase_key("wifi_password");
+            ret = wifi_prov_mgr_reset_provisioning();
+            ESP_LOGI(TAG, "clearing provisioning data");
+            break;
+        case 'p':
+            ret = wifi_provisioning();
+            ESP_LOGI(TAG, "start provisioning");
             break;
         case '\0':
         case '\n':
@@ -534,8 +548,15 @@ void command_task(void *pvParameters)
     command_parameter *para = (command_parameter *) pvParameters;
     char *cmdbuf = NULL, *p;
     const char *id = "uart";
-    const char *prompt = LOG_COLOR(LOG_COLOR_YELLOW)"esp> "LOG_RESET_COLOR;
     const char *prompt_nocolor = "esp> ";
+#if CONFIG_LOG_COLORS
+    const char *prompt = LOG_COLOR(LOG_COLOR_YELLOW)"esp> "LOG_RESET_COLOR;
+#else
+    /* Since the terminal doesn't support escape sequences,
+     * don't use color codes in the s_prompt.
+     */
+    const char *prompt = prompt_nocolor;
+#endif //CONFIG_LOG_COLORS
     bool use_console = true;
     bool quit = false;
 
@@ -567,12 +588,6 @@ void command_task(void *pvParameters)
         if (probe_status) {
             /* zero indicates success */
             linenoiseSetDumbMode(1);
-#if CONFIG_LOG_COLORS
-            /* Since the terminal doesn't support escape sequences,
-             * don't use color codes in the s_prompt.
-             */
-            prompt = prompt_nocolor;
-#endif //CONFIG_LOG_COLORS
         }
         if (linenoiseIsDumbMode()) {
             printf("\n"

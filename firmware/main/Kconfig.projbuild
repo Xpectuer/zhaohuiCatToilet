@@ -95,9 +95,9 @@ menu "Network Configuration"
         help 
             Reprovision if timeout or failure occured.
     
-    config PROV_SHOW_QR
-        bool "Show QR Code when provisioning"
-        default y
+    #config PROV_SHOW_QR
+    #    bool "Show QR Code when provisioning"
+    #    default y
     
     config RESET_PROV_MGR_ON_FAILURE
         bool "Reset provisioning manager on failure"

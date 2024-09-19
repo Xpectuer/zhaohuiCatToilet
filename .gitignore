@@ -4,3 +4,4 @@ sdkconfig.old
 dependencies.lock
 firmware/managed_components/
 data
+__pycache__
