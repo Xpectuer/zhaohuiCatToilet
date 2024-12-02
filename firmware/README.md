@@ -54,7 +54,7 @@ idf.py menuconfig
 ```
 
 在弹出的文字图形界面中，
-在 `Example Connection Configuration` 菜单下配置以下参数:
+在 `Network Configuration` 菜单下配置以下参数:
 
 * 勾选 `connect using WiFi interface`
 * 勾选 `Provide wiri connect commands`'

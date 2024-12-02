@@ -16,6 +16,7 @@
 #define BDC_MCPWM_GPIO_A              CONFIG_DRV8871_A
 #define BDC_MCPWM_GPIO_B              CONFIG_DRV8871_B
 
+
 static esp_err_t bdc_motor_mcpwm_forward_brake(bdc_motor_t *motor);
 static esp_err_t bdc_motor_mcpwm_reverse_brake(bdc_motor_t *motor);
 
@@ -23,7 +24,7 @@ static esp_err_t bdc_motor_mcpwm_reverse_brake(bdc_motor_t *motor);
 static const char *TAG = "motor";
 static bdc_motor_handle_t motor = NULL;
 static bool brake_mode = false;
-static uint32_t speed_percent = 0;
+static int speed_percent = 0;
 
 esp_err_t DRV8871_init(void){
 
@@ -38,6 +39,8 @@ esp_err_t DRV8871_init(void){
         .resolution_hz = BDC_MCPWM_TIMER_RESOLUTION_HZ,
     };
     ESP_RETURN_ON_ERROR(bdc_motor_new_mcpwm_device(&motor_config, &mcpwm_config, &motor), TAG, "Initialize bdc motor failed");
+    ESP_RETURN_ON_ERROR(gpio_set_drive_capability(BDC_MCPWM_GPIO_A, GPIO_DRIVE_CAP_1), TAG, "setting GPIO driving capability failed for GPIO_A");
+    ESP_RETURN_ON_ERROR(gpio_set_drive_capability(BDC_MCPWM_GPIO_B, GPIO_DRIVE_CAP_1), TAG, "setting GPIO driving capability failed for GPIO_B");
 
     ESP_LOGI(TAG, "Enable motor");
     ESP_RETURN_ON_ERROR(bdc_motor_enable(motor), TAG, "Enable motor failed");
@@ -47,51 +50,67 @@ esp_err_t DRV8871_init(void){
     return ESP_OK;
 }
 
-esp_err_t DRV8871_set_speed(uint32_t speed){
-    ESP_RETURN_ON_FALSE(speed <= 100, ESP_ERR_INVALID_ARG, TAG, "invalid argument: %"PRIu32, speed);
+int DRV8871_get_speed(){
+    return speed_percent;
+}
+
+esp_err_t DRV8871_set_speed(int speed){
+    ESP_RETURN_ON_FALSE(speed <= 100, ESP_ERR_INVALID_ARG, TAG, "invalid argument: %d", speed);
     speed_percent = speed;
-    ESP_LOGI(TAG, "Set motor speed: %"PRIu32, speed);
-    uint32_t comp_value = speed * BDC_MCPWM_DUTY_TICK_MAX /100;
+    ESP_LOGD(TAG, "Set motor speed: %d", speed);
+    int comp_value = speed * BDC_MCPWM_DUTY_TICK_MAX /100;
     if (brake_mode)
         comp_value = BDC_MCPWM_DUTY_TICK_MAX - comp_value;
     return bdc_motor_set_speed(motor, comp_value);
 };
 
+//esp_err_t DRV8871_speed_up(void){
+//    int speed = speed_percent+SPEED_STEP;
+//    if (speed > 100) speed = 100;
+//    return DRV8871_set_speed(speed);
+//};
+
+//esp_err_t DRV8871_speed_down(void){
+//    int speed = speed_percent-SPEED_STEP;
+//    if (speed < 0) speed = 0;
+//    return DRV8871_set_speed(speed);
+//};
+
 esp_err_t DRV8871_forward(void){
     brake_mode = false;
-    ESP_LOGI(TAG, "Forward motor");
+    ESP_LOGD(TAG, "Forward motor");
     ESP_RETURN_ON_ERROR(DRV8871_set_speed(speed_percent), TAG, "Setting speed failed");
     return bdc_motor_forward(motor);
 }
 
 esp_err_t DRV8871_reverse(void){
     brake_mode = false;
-    ESP_LOGI(TAG, "Reverse motor");
+    ESP_LOGD(TAG, "Reverse motor");
     ESP_RETURN_ON_ERROR(DRV8871_set_speed(speed_percent), TAG, "Setting speed failed");
     return bdc_motor_reverse(motor);
 }
 
 esp_err_t DRV8871_forward_brake(void){
     brake_mode = true;
-    ESP_LOGI(TAG, "Forward motor");
+    ESP_LOGD(TAG, "Forward motor");
     ESP_RETURN_ON_ERROR(DRV8871_set_speed(speed_percent), TAG, "Setting speed failed");
     return bdc_motor_mcpwm_forward_brake(motor);
 }
 
 esp_err_t DRV8871_reverse_brake(void){
     brake_mode = true;
-    ESP_LOGI(TAG, "Reverse motor");
+    ESP_LOGD(TAG, "Reverse motor");
     ESP_RETURN_ON_ERROR(DRV8871_set_speed(speed_percent), TAG, "Setting speed failed");
     return bdc_motor_mcpwm_reverse_brake(motor);
 }
 
 esp_err_t DRV8871_coast(void){
-    ESP_LOGI(TAG, "Coast motor");
+    ESP_LOGD(TAG, "Coast motor");
     return bdc_motor_coast(motor);
 }
 
 esp_err_t DRV8871_brake(void){
-    ESP_LOGI(TAG, "Brake motor");
+    ESP_LOGD(TAG, "Brake motor");
     return bdc_motor_brake(motor);
 }
 
